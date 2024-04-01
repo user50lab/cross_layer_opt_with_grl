@@ -26,12 +26,13 @@ from runners import REGISTRY as run_REGISTRY
 DEFAULT_DATA_DIR = osp.join(osp.abspath(osp.dirname(__file__)), 'results')
 
 
+### 递归函数，用于合并两个字典。它将在字典d的基础上逐步更新或添加字典u中的键值对。
 def recursive_dict_update(d, u):
     """Merges two dictionaries."""
 
     for k, v in u.items():
-        if isinstance(v, Mapping):
-            d[k] = recursive_dict_update(d.get(k, {}), v)
+        if isinstance(v, Mapping):   # 检查v是否是另一个字典
+            d[k] = recursive_dict_update(d.get(k, {}), v)   # d.get(k, {})尝试从字典d中获取键为k的值，如果没有找到就返回一个空字典。然后，这个值与v进行递归合并。
         else:
             d[k] = v
     return d
@@ -224,7 +225,9 @@ if __name__ == '__main__':
 
     # # Train Ad Hoc route.
     env_id = 'ad-hoc'
-    env_kwargs = dict()
+    env_kwargs = dict()   # 创建空字典
 
+    # train_kwargs字典将这些参数存储为键值对，这将使得在函数或方法调用时更方便地传入训练参数。
+    # 例如你可能会在代码中看到这样的调用：train_model(**train_kwargs)。在这种情况下，字典中存储的所有键值对都将被作为参数传递给train_model函数。
     train_kwargs = dict(use_cuda=True, cuda_idx=0, use_wandb=False, record_tests=True, rollout_len=10, data_chunk_len=5)
     run(env_id, env_kwargs, args.seed, algo_name=args.algo, train_kwargs=train_kwargs, run_tag=args.tag)
