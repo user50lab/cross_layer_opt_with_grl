@@ -49,6 +49,7 @@ def config_copy(config):
         return deepcopy(config)
 
 
+### 对配置进行检查和调整，最后返回更新后的配置对象。
 def check_args_sanity(config: Mapping[str, Any]) -> dict[str, Any]:
     """Checks the feasibility of configuration."""
 
@@ -148,11 +149,17 @@ def run(env_id: str, env_kwargs: Mapping[str, Any], seed: int = 0, algo_name: st
     # Make sure the legitimacy of configuration.
     config = check_args_sanity(config)
     del algo_config, train_kwargs  # Delete redundant variables.
+    '''
+    例子：
+    config = {'key1': 'value1', 'key2': 'value2'}
+    args = SimpleNamespace(**config)
+    现在args会拥有key1和key2作为它的属性，可以通过args.key1和args.key2来访问这些值。
+    '''
     args = SN(**config)  # Convert to simple namespace.
 
-    # Get directory to store models/results.
+    # Get directory to store models/results. 获取存储模型或结果文件的目录
     # Project identifier includes `env_id` and probably `scenario`.
-    scenario = env_kwargs.get('scenario_name', None)
+    scenario = env_kwargs.get('scenario_name', None)  # 从env_kwargs字典中提取键为'scenario_name'的值。如果env_kwargs字典中没有'scenario_name'这个键，那么scenario变量将被赋值为None。
     if add_suffix:
         if suffix is not None:
             project_name = env_id + '_' + suffix
