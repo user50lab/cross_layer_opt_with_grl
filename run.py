@@ -196,7 +196,6 @@ def run(env_id: str, env_kwargs: Mapping[str, Any], seed: int = 0, algo_name: st
     # 在default.yaml文件中定义了policy=='shared'
     # policy_REGISTRY是一个字典，通过shared索引关联到SharedPolicy 类
     # policy = policy_REGISTRY['shared'](env_info, args)：实例化 SharedPolicy 类，传入 env_info 和 args 参数。
-    # ————————————————————看到这里了————记得跳转到SharedPolicy类—————————————————————————————————————————
     policy = policy_REGISTRY[args.policy](env_info, args)  # Policy making decisions
     policy.to(args.device)  # Move policy to device.
 
