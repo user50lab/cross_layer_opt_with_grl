@@ -9,6 +9,7 @@ class ReplayBuffer:
 
     def __init__(self, args):
 
+        # 创建集合
         self.pre_decision_fields = set(args.pre_decision_fields)  # Field names before agent decision
         self.post_decision_fields = set(args.post_decision_fields)  # Field names after agent decision
         self.fields = self.pre_decision_fields.union(self.post_decision_fields)  # Overall fields
