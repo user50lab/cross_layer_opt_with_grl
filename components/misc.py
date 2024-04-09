@@ -137,9 +137,10 @@ def onehot_from_actions(actions: Tensor, n_classes: Union[int, list]):
 
 # --- Functions shared by learners ---
 
+### 根据给定的总步数 total_steps 和衰减阈值 threshold 产生一个用于学习率衰减的函数。
 def get_clipped_linear_decay(total_steps, threshold):
     assert 1 > threshold >= 0, "Invalid threshold of linear decay."
-    return lambda step: max(threshold, 1 - step / total_steps)  # Linear decay and then flat
+    return lambda step: max(threshold, 1 - step / total_steps)  # Linear decay and then flat   # 随着训练步数的增加逐渐减小学习率，直到衰减到阈值 threshold，然后保持这个阈值不变。
 
 
 def mse_loss(error: Tensor, mask: Optional[Tensor] = None):
