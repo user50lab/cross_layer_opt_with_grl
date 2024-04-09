@@ -71,7 +71,7 @@ def check_args_sanity(config: Mapping[str, Any]) -> dict[str, Any]:
 
     return config
 
-
+### 根据传入的环境对象env更新一个叫作args的对象的属性。
 def update_args_from_env(env: MultiAgentEnv, args):
     """Updates args from env."""
 
@@ -185,10 +185,13 @@ def run(env_id: str, env_kwargs: Mapping[str, Any], seed: int = 0, algo_name: st
 
     # Define env function.
     # functools.partial是Python的一个高阶函数，其作用是：基于一个函数创建一个新的可调用对象，把原函数的某些参数固定住（也就是设置默认值），返回一个新的函数。
-    env_fn = partial(env_REGISTRY[env_id], **env_kwargs)  # Env function
+    # env_REGISTRY是一个字典，保存了不同环境(env)的构造函数或者函数。env_id是这个字典中某个环境（此处是ad-hoc）的键（key）。
+    # env_kwargs是一个包含了关键字参数的字典，**env_kwargs是一个关键字参数展开的语法，意味着它将env_kwargs这个字典中的所有项作为关键字参数传递给函数。
+    env_fn = partial(env_REGISTRY[env_id], **env_kwargs)  # Env function   # 使用指定的env_id从env_REGISTRY这个字典中获取一个函数，并利用partial函数将env_kwargs字典中的参数作为默认值，创建一个新的函数对象并赋值给env_fn。
     test_env_fn = partial(env_REGISTRY[env_id], **env_kwargs)  # Test env function
 
     # Create runner holding instance(s) of env and get info.
+    # runner是基于run_REGISTRY字典中的一个元素所创建的实例或者函数的结果。
     runner = run_REGISTRY[args.runner](env_fn, test_env_fn, args)
     args = update_args_from_env(runner.env, args)  # Adapt args to env.
 
