@@ -91,20 +91,21 @@ class BaseRunner:
 
     def warmup(self) -> dict[str, Tensor]:
         """Prepares for training."""
-        # Reset variables.
+        # Reset variables. 重置时间步计数器self.t_env
         self.t_env = 0  # Reset timestep counter.
 
-        # Reset components.
+        # Reset components. 重置环境self.env和学习算法self.learner。这通常涉及到将环境中的智能体位置回到初始状态，并且清除学习器中的累积数据，为新训练周期做准备。
         self.env.reset()  # Reset env.
         self.learner.reset()  # Reset learner.
-        rnn_states = self.get_init_hidden()  # Initial RNN states
+        rnn_states = self.get_init_hidden()  # Initial RNN states 获取初始的递归神经网络（RNN）状态。
 
         # Let agents select random actions to fill replay buffer.
         self.policy.eval()  # Set policy to eval mode.
         self.learner.eval()  # Set modules held by learner to eval mode.
         self.t_warmup = 0  # Reset warm-up step counter.
+        # 这是一个循环，将会持续到预热步数达到self.args.warmup_steps设定的值或者经验回放缓冲区有足够数据进行一次完整的批处理抽样。
         while (self.t_warmup < self.args.warmup_steps) or not self.buffer.can_sample(self.args.batch_size):
-            rnn_states = self.interact(rnn_states, mode='rand')  # Random interaction
+            rnn_states = self.interact(rnn_states, mode='rand')  # Random interaction 通过调用interact方法使用随机动作与环境互动，并逐步更新rnn_states。
             self.t_warmup += 1  # One frozen step is completed.
 
         return rnn_states  # Leave RNN states.
