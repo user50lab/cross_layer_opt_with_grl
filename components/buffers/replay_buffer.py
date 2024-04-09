@@ -7,6 +7,7 @@ from components.misc import *
 class ReplayBuffer:
     """Replay buffer storing sequences of transitions."""
 
+    ### 初始化经验缓冲区，用于在强化学习中存储智能体与环境交互的经验。
     def __init__(self, args):
 
         # 创建集合
@@ -25,7 +26,7 @@ class ReplayBuffer:
 
     def _reset_sequence(self) -> None:
         """cleans up the data sequence."""
-        self.sequence = {k: [] for k in self.fields}
+        self.sequence = {k: [] for k in self.fields}   # 字典的键是由 self.fields 集合中的元素定义的，而每个键对应的值都是一个空列表。
         self.ptr = 0
 
     def insert(self, transition):
@@ -34,7 +35,7 @@ class ReplayBuffer:
         """
 
         # When maximum sequence length is reached,
-        if self.ptr == self.data_chunk_len:
+        if self.ptr == self.data_chunk_len:   # 检查当前数据序列的长度 self.ptr 是否达到了最大长度 self.data_chunk_len
             # Append the pre-decision data beyond the last timestep to data sequence.
             for k in self.pre_decision_fields:
                 self.sequence[k].append(transition.get(k, ''))
