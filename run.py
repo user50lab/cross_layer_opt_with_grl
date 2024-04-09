@@ -184,6 +184,7 @@ def run(env_id: str, env_kwargs: Mapping[str, Any], seed: int = 0, algo_name: st
         args.wandb_run_dir = wandb.run.dir
 
     # Define env function.
+    # functools.partial是Python的一个高阶函数，其作用是：基于一个函数创建一个新的可调用对象，把原函数的某些参数固定住（也就是设置默认值），返回一个新的函数。
     env_fn = partial(env_REGISTRY[env_id], **env_kwargs)  # Env function
     test_env_fn = partial(env_REGISTRY[env_id], **env_kwargs)  # Test env function
 
