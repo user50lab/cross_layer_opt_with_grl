@@ -110,6 +110,7 @@ class BaseRunner:
 
         return rnn_states  # Leave RNN states.
 
+    ### 在固定数量的时间步长内探索环境以收集经验。
     def collect(self, rnn_states: dict[str, Tensor]) -> dict[str, Tensor]:
         """Explores a fixed number of timesteps to collect experiences."""
         self.policy.eval()  # Set policy to eval mode.
@@ -141,17 +142,18 @@ class BaseRunner:
     def interact(self, rnn_states: dict[str, Tensor], mode: str = 'explore'):
         """Completes an agent-env interaction loop of MDP."""
 
-        # Build pre-decision data.
+        # Build pre-decision data. 字典结合了从环境中获取的输入（通过self.get_inputs_from_env(self.env)方法）以及当前的rnn_states。
         pre_decision_data = dict(**self.get_inputs_from_env(self.env), **rnn_states)
 
         # Select actions following epsilon-greedy strategy.
         # print(f"self.env.nbrs = {[nbr.nid for nbr in self.env.nbrs]}, "
         #       f"self.env.agent.is_connected = {self.env.agent.is_connected}")
         # print(f"avail_acts = \n{pre_decision_data['avail_actions']}")
+        # 调用policy对象的act方法，从提供的观察（observation）、RNN状态和可用动作中选择动作。这个方法返回选定的动作和更新后的RNN隐藏状态。
         actions, h = self.policy.act(pre_decision_data['obs'], pre_decision_data['h'],
                                      pre_decision_data['avail_actions'], self.t_env, mode=mode)
 
-        # Call environment step.
+        # Call environment step. 执行环境的step方法来将动作应用到环境中，并获得相应的奖励、是否终止了交互循环、以及其他信息。
         rewards, terminated, info = self.env.step(self.get_actions_to_env(actions, self.env))
 
         # When deterministic policy gradient is used, apply one-hot encoding to discrete actions.
@@ -160,6 +162,7 @@ class BaseRunner:
             actions = onehot_from_actions(actions, n_classes)
 
         # Call learner step to get required data (e.g., critic RNN states for off-policy AC algos).
+        # 调用learner的step方法以获取所需的数据（例如，对于离策略算法，这可以是批评者的RNN状态），然后更新rnn_states字典。
         rnn_states = dict(h=h, **self.learner.step(pre_decision_data, actions))  # Next RNN states
 
         # Collect post-decision data.
@@ -167,7 +170,7 @@ class BaseRunner:
             'actions': actions, 'rewards': rewards,
             'terminated': terminated != info.get('truncated', False),
         }
-        # Save transition to replay buffer.
+        # Save transition to replay buffer. 将经过处理的动作、奖励和终止信息，以及前决策和后决策数据一起存入回放缓冲区。
         self.cache(**pre_decision_data, **post_decision_data, filled=True)
 
         # Reach the end of an episode.
@@ -188,10 +191,10 @@ class BaseRunner:
                 actions = onehot_from_actions(actions, n_classes)
             # Take empty rewards.
             empty_rewards = np.zeros(self.policy.n_agents, dtype=np.float32)
-            # Forge the spurious transition and store to replay buffer.
+            # Forge the spurious transition and store to replay buffer. 创建了一个虚假的转移（pseudo-transition），包括了上文获取的最后动作、零奖励、终止信号以及是否填充的标志（伪造的转移在实际中并没有发生，因此填充标志为 False），同时还合并了之前获得的最后输入和RNN状态。
             pseudo_transition = dict(actions=actions, rewards=empty_rewards, terminated=True, filled=False,
                                      **last_inputs, **rnn_states)
-            self.cache(**pseudo_transition)
+            self.cache(**pseudo_transition)   # 将伪造的转移存储到缓存中，这通常用于后期的训练过程中，如利用回放缓冲区（replay buffer）进行经验回放。
 
             # Reset env and RNN states.
             self.env.reset()
@@ -251,12 +254,13 @@ class BaseRunner:
         # Insert transition to replay buffer.
         self.buffer.insert(transition)
 
+    ### 测试训练好的智能体的性能。
     def test_agent(self):
         """Tests the performance of trained agent."""
-        test_ep_rsts = {}
-        self.policy.eval()  # Set policy to eval mode.
-        for j in range(self.args.n_test_episodes):
-            self.test_env.reset()  # Reset test env.
+        test_ep_rsts = {}   # 初始化一个空字典 test_ep_rsts，这个字典后续用于存储测试过程中的结果数据。
+        self.policy.eval()  # Set policy to eval mode. 将智能体的策略模型设置为评估（eval）模式，这在深度学习框架中通常关闭训练时特有的行为，如dropout等。
+        for j in range(self.args.n_test_episodes):   # n_test_episodes：要测试的回合数。
+            self.test_env.reset()  # Reset test env.  重置测试环境 self.test_env 以便开始新的回合。
             h, terminated = self.policy.init_hidden().to(self.device), False  # Reset RNN states and terminated.
 
             # Run an episode.
