@@ -10,36 +10,36 @@ from modules.mixers import REGISTRY as mix_REGISTRY
 class QLearner(BaseLearner):
     """Multi-agent Q learning with recurrent models"""
 
-    def __init__(self, env_info, policy, args) -> None:
+    def __init__(self, env_info, policy, args) -> None:   # 初始化方法定义，接受三个参数：env_info 包含环境信息，policy 表示智能体的策略模型，args 表示其他参数。返回类型为 None。
 
         self.device = args.device
         self.online_policy = policy
         print(self.online_policy)
-        self.params = list(self.online_policy.parameters())
-        self.target_policy = deepcopy(self.online_policy)
+        self.params = list(self.online_policy.parameters())   # 提取在线策略的所有参数，并将它们转换为一个列表，存储在 self.params。
+        self.target_policy = deepcopy(self.online_policy)   # 创建在线策略的深拷贝，并赋值给 self.target_policy，这是用于稳定学习过程的目标策略。
 
         self.args = args  # Arguments
         self.n_agents = policy.n_agents  # Number of agents
         self.n_updates = None  # Number of completed updates
 
         # Set mixer to combine individual state-action values to global ones.
-        self.mixer = None
-        if hasattr(args, 'mixer'):  # Mixer is specified.
-            self.mixer = mix_REGISTRY[args.mixer](env_info['state_shape'], self.n_agents, args).to(self.device)
+        self.mixer = None   # 在多智能体强化学习中，mixer 用于将每个智能体的价值函数混合成全局价值函数。
+        if hasattr(args, 'mixer'):  # Mixer is specified. 检查 args 对象是否具有 mixer 属性，如果有，说明指定了混合器。
+            self.mixer = mix_REGISTRY[args.mixer](env_info['state_shape'], self.n_agents, args).to(self.device)   # 从一个注册表 mix_REGISTRY 中，根据 args.mixer 创建一个混合器对象，传入环境状态形状和智能体数量等参数，并将其设置至指定设备。
             print(f"Mixer: \n{self.mixer}")
-            self.params += list(self.mixer.parameters())
-            self.target_mixer = deepcopy(self.mixer)
+            self.params += list(self.mixer.parameters())   # 将混合器的参数也加入到之前定义的参数列表 self.params 中。
+            self.target_mixer = deepcopy(self.mixer)   # 创建混合器的深拷贝，并赋值给 self.target_mixer，用于稳定学习过程。
 
         # Define optimizer.
-        self._use_huber_loss = args.use_huber_loss  # Whether Huber loss is used.
-        self.optimizer = th.optim.Adam(self.params, lr=args.lr, eps=args.optim_eps)
+        self._use_huber_loss = args.use_huber_loss  # Whether Huber loss is used.   # 设定一个私有变量 self._use_huber_loss，根据 args 中的属性判断是否使用 Huber 损失函数。
+        self.optimizer = th.optim.Adam(self.params, lr=args.lr, eps=args.optim_eps)   # 创建一个优化器对象 self.optimizer，采用 Adam 算法，传入了之前收集的所有参数和学习率 lr、epsilon值 optim_eps。
 
         # Set learning rate scheduler.
-        if self.args.anneal_lr:
-            lr_lam = get_clipped_linear_decay(total_steps=10, threshold=0.4)
-            self.lr_scheduler = th.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lr_lam, verbose=True)
+        if self.args.anneal_lr:   # 检查是否启用了学习率退火调整。
+            lr_lam = get_clipped_linear_decay(total_steps=10, threshold=0.4)   # 获取一个退火函数，参数表明总步数为10，阈值为0.4。
+            self.lr_scheduler = th.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lr_lam, verbose=True)   # 使用该退火函数创建学习率调度器 self.lr_scheduler。
 
-        self._use_double_q = args.use_double_q  # Whether double Q-learning is used
+        self._use_double_q = args.use_double_q  # Whether double Q-learning is used   # 设定一个私有变量 self._use_double_q，依据 args 中的属性来判断是否使用双重 Q 学习（Double Q-Learning）策略。
 
     def reset(self):
         """Resets the learner."""
