@@ -55,11 +55,12 @@ class ReplayBuffer:
                 self.sequence[k].append(v)   # 将值 v 添加到数据序列 self.sequence 中相应字段 k 的列表中。
         self.ptr += 1  # A complete transition is stored.   # 更新指针 self.ptr，自增1表示一个完整的变换已被存储到数据序列中。
 
+    ### 用于存储和随机检索训练数据的 ReplayBuffer 类。
     def recall(self, batch_size: int):
         """Selects a random batch of samples."""
-        assert len(self) >= batch_size, "Samples are insufficient."
-        samples = random.sample(self.memory, batch_size)  # List of samples
-        batched_samples = {k: [] for k in self.fields}  # Dict holding batch of samples.
+        assert len(self) >= batch_size, "Samples are insufficient."   # 断言语句，用于确保 ReplayBuffer 的大小至少与要随机选择的样本批量大小 batch_size 相等。如果不满足这个条件，则会引发一个异常。
+        samples = random.sample(self.memory, batch_size)  # List of samples   # 从 self.memory 中随机抽取 batch_size 大小的样本，返回一个列表，其中每个样本都是一次过去的transition（即，一个序列数据点）。
+        batched_samples = {k: [] for k in self.fields}  # Dict holding batch of samples.   # 字典 batched_samples将被用来保存整个批量数据。字典键是来自 self.fields 的字段，相应的值初始化为空列表。
 
         # Construct input sequences.
         for t in range(self.data_chunk_len):
