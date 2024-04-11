@@ -57,17 +57,27 @@ class AdHocEnv(MultiAgentEnv):
         self._allow_full_duplex = True if self.n_chans == 1 else False
 
         # Get benchmarks.
+        # self.n_pow_lvs > 1：这表示环境中是否有多于一个的功率水平可以选择。如果只有一个功率水平，那么所有的传输都将使用这个固定的功率水平，没有必要进行功率控制。
+        # 'Rand' not in self.bm_pow_ctrls：这检查了self.bm_pow_ctrls（一个记录所有基准功率控制器名称的元组）是否不包括'Rand'。这里'Rand'代表随机选择功率水平的策略。
         if (self.n_pow_lvs > 1) and ('Rand' not in self.bm_pow_ctrls):  # Compare learnt policy and rand choice.
-            self.bm_pow_ctrls += ('Rand',)
-        benchmark_schemes = list(itertools.product(self.bm_rts, self.bm_pow_ctrls))
+            self.bm_pow_ctrls += ('Rand',)   # 存在多个功率水平，并且随机功率控制策略还不在基准列表中，就会在环境中的基准功率控制器列表中添加一个随机策略，用于与学习到的策略进行性能比较。
+        # 这行代码使用itertools.product函数创建了基准路由器(self.bm_rts)和基准功率控制器(self.bm_pow_ctrls)所有可能组合的一个列表。
+        # itertools.product函数产生笛卡尔积，相当于嵌套的循环。
+        # 例如，对于路由器['A', 'B'] 和功率控制器['X', 'Y', 'Z']，它将生成六个组合[('A', 'X'), ('A', 'Y'), ('A', 'Z'), ('B', 'X'), ('B', 'Y'), ('B', 'Z')]。
+        benchmark_schemes = list(itertools.product(self.bm_rts, self.bm_pow_ctrls))   
         self.bm_perf = dict.fromkeys(benchmark_schemes)  # Performance of benchmark schemes
         self.bm_paths = dict()  # Copy of benchmark routes
 
         # Create entities in the env.
         self.nodes = [Node(m, self.n_chans) for m in range(self.n_nodes)]
 
+        ## 构建离散的功率水平
         def builds_power_levels(n_levels, p_max):
             """Builds discrete power levels."""
+            '''np.arange(n_levels, dtype=np.float32)：使用 numpy 库的 arange 函数生成从 0 开始的、长度为 n_levels（功率水平的数目），数据类型为 float32 的数组。例如，如果 n_levels 是 4，这个命令将生成一个数组 [0.0, 1.0, 2.0, 3.0]。'''
+            '''(np.arange(n_levels, dtype=np.float32) + 1)：为数组中的每个元素加 1，使得创建的序列从 1 开始而不是从 0 开始，这样就不会有零功率的情况。对于 n_levels 是 4 的例子，现在数组会是 [1.0, 2.0, 3.0, 4.0]。'''
+            '''(np.arange(n_levels, dtype=np.float32) + 1) / n_levels：上一步得到的数组的每个元素都除以 n_levels，对于4功率水平的例子，这将生成 [0.25, 0.5, 0.75, 1.0]。'''
+            '''... * p_max：最后，把上一步的结果乘以 p_max，这将每个元素都按比例放大到 p_max 设定的最大功率值。如果 p_max 是 100，那么最终生成的功率水平就是 [25.0, 50.0, 75.0, 100.0]。'''
             return (np.arange(n_levels, dtype=np.float32) + 1) / n_levels * p_max
 
         # Ambient flows take fixed Tx power with unlimited budget,
@@ -245,9 +255,10 @@ class AdHocEnv(MultiAgentEnv):
 
         return reward, terminated, info
 
+    ### 将代理（agent）移交给数据流（flow）。
     def handover_agent(self, flow: Flow):
         """Hands-over agent to data flow."""
-        self.agent = flow  # Assign flow to be agent.
+        self.agent = flow  # Assign flow to be agent.   # 将传入的flow参数分配给类的agent属性。
         self._find_neighbors()  # Since front node is altered, call update neighbors.
 
     @staticmethod
@@ -255,24 +266,25 @@ class AdHocEnv(MultiAgentEnv):
         """Computes distance between two nodes."""
         return np.linalg.norm(node1.pos - node2.pos)
 
+    ### 为当前代理流的前端节点寻找符合条件的邻居节点。
     def _find_neighbors(self):
         """Finds qualified neighbors for front node of current agent flow."""
         # Check whether maximum hop is reached or battery is depleted.
-        front_nid = self.agent.front.nid
-        is_overtime = (self.agent.n_hops == self.max_hops - 1) and not self.agent.is_connected
-        is_low_battery = (self.agent.p_rem < 2 * self.agent.p_lvs[0]) and not self.agent.is_connected
+        front_nid = self.agent.front.nid   # 获取当前代理流的前端节点的节点ID（nid），并将其存储在变量front_nid中。
+        is_overtime = (self.agent.n_hops == self.max_hops - 1) and not self.agent.is_connected   # 检查是否达到最大跳数（max_hops）或代理流尚未连接（is_connected）。
+        is_low_battery = (self.agent.p_rem < 2 * self.agent.p_lvs[0]) and not self.agent.is_connected   # 检查代理流的剩余功率（p_rem）是否小于两倍的最低生存功率（p_lvs[0]），同时代理流尚未连接。
 
         if self.agent.is_connected:  # When agent is connected:
             # `terminated` would be then activated to reset the env.
-            nbrs = []  # No neighbor is available after termination of episode.
+            nbrs = []  # No neighbor is available after termination of episode.   # 如果代理流已经连接，则将nbrs设为空列表，因为连接后不需要再寻找邻居。
         elif is_overtime or is_low_battery:  # When any failure occurs:
             if self._force_cnct:
-                nbrs = [self.agent.dst]  # Destination is the only neighbor.
+                nbrs = [self.agent.dst]  # Destination is the only neighbor.   # 将目的节点作为唯一的邻居。
             else:
                 nbrs = []
-        else:
+        else:   # 如果没有连接，也没有超时或电池电量不足的情况，将根据当前前端节点的距离对所有节点进行排序，并根据一定的条件收集邻居节点。
             # Sort all nodes in ascending order of distance to current front node.
-            sorted_nids = np.argsort(self.d_n2n[self.agent.front.nid])
+            sorted_nids = np.argsort(self.d_n2n[self.agent.front.nid])   # 对所有节点按照与前端节点的距离进行排序。
             nbrs = []
             for nid in sorted_nids:
                 # Add node to neighbors when all of following conditions are met: The neighbor
@@ -283,8 +295,8 @@ class AdHocEnv(MultiAgentEnv):
                 if len(nbrs) >= self.max_nbrs:
                     break
             # Shuffle the order of neighbors.
-            random.shuffle(nbrs)
-            is_isolated = (len(nbrs) == 0) and not self.agent.is_connected
+            random.shuffle(nbrs)   # 对邻居列表进行随机排序。
+            is_isolated = (len(nbrs) == 0) and not self.agent.is_connected   # 检查是否处于孤立状态，即没有找到邻居，且代理流没有连接。
             if is_isolated and self._force_cnct:
                 nbrs = [self.agent.dst]
         # Assign neighbors.
