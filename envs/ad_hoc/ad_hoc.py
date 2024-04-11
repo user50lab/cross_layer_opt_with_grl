@@ -110,14 +110,14 @@ class AdHocEnv(MultiAgentEnv):
         self.agent: Flow = self.flows[-1]
         self.nbrs: list[Node] = []  # Neighbors around front node of agent
 
-        self.all_actions = []
+        self.all_actions = []   # 用于存储每个流程（flow）可能的所有动作（actions）。
         for flow in self.flows:
-            action_tuples = [range(self.max_nbrs)]
+            action_tuples = [range(self.max_nbrs)]   # 表示从0到self.max_nbrs（一个表示最大邻居数的属性）的整数序列，代表可能的邻居选择。
             if self._learn_pc:
                 action_tuples.append(range(flow.n_pow_lvs))
-            all_agent_actions = list(itertools.product(*action_tuples))
-            all_agent_actions.append('no-op')
-            self.all_actions.append(all_agent_actions)
+            all_agent_actions = list(itertools.product(*action_tuples))   # 使用itertools.product函数计算action_tuples列表中所有元素的笛卡尔积，生成所有可能的动作组合，然后将其转换为列表all_agent_actions。这个列表包含了所有可能的动作（邻居选择和功率级别组合）。
+            all_agent_actions.append('no-op')   # 将字符串'no-op'追加到all_agent_actions列表中，这代表一个无操作（no operation）的动作，可能用于表示在当前时刻没有选择任何动作。
+            self.all_actions.append(all_agent_actions)   # 将包含了当前流程所有可能动作的列表all_agent_actions追加到self.all_actions列表中。
 
         self.observation_space = []
         self.shared_observation_space = []
