@@ -122,6 +122,7 @@ class AdHocEnv(MultiAgentEnv):
         self.observation_space = []
         self.shared_observation_space = []
         self.action_space = []
+        # 定义强化学习环境中的观测空间，即agent可以观察到的环境状态的范围。
         self.observation_space.append(
             Dict(spaces={
                 'agent': Box(-np.inf, np.inf, shape=np.array([self.obs_own_feats_size])),
