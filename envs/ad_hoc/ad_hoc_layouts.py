@@ -55,7 +55,7 @@ class Stationary(AdHocLayout):
 
     def set_stationary_node_positions(self):
         """Evenly sets positions of nodes in each subregion."""
-        pos_nodes = []
+        pos_nodes = []   # 初始化一个空列表pos_nodes，这个列表将用来存储所有节点的位置。
         # Randomly draw positions of nodes in each subregion.
         for rgn_idx in range(self.n_rgns):
             o_rgn = self.range_rgn * np.array([rgn_idx // 3, rgn_idx % 3])  # Origin of subrigion
