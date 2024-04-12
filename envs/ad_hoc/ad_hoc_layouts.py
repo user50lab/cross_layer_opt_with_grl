@@ -60,9 +60,9 @@ class Stationary(AdHocLayout):
         for rgn_idx in range(self.n_rgns):
             o_rgn = self.range_rgn * np.array([rgn_idx // 3, rgn_idx % 3])  # Origin of subrigion
             coor_nodes_in_rgn = select_from_box(self.n_nodes_per_rgn[rgn_idx], 0, int(self.range_rgn // self.min_link_dist), self.dim_pos)
-            pos_nodes_in_rgn = o_rgn + self.min_link_dist * coor_nodes_in_rgn
+            pos_nodes_in_rgn = o_rgn + self.min_link_dist * coor_nodes_in_rgn   # 将coor_nodes_in_rgn中每个节点的相对坐标转换为绝对坐标。
             pos_nodes.append(pos_nodes_in_rgn)
-        pos_nodes = np.concatenate(pos_nodes)
+        pos_nodes = np.concatenate(pos_nodes)   # 将pos_nodes列表中的所有子数组连接成一个单一的NumPy数组，这个数组包含了所有子区域中所有节点的位置。
         return pos_nodes
 
     def sample_nodes_from_region(self, rgn_idx, n_nodes):
