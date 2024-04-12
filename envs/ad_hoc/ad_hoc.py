@@ -149,7 +149,7 @@ class AdHocEnv(MultiAgentEnv):
         return self.agent.n_pow_lvs if self._learn_pc else 1
 
     def reset(self):
-        if self.agent != self.flows[-1]:  # Finished agent-flow is not the last one.
+        if self.agent != self.flows[-1]:  # Finished agent-flow is not the last one.   # 检查当前代理（self.agent）是否不是流列表（self.flows）中的最后一个元素。
             self.handover_agent(self.flows[self.flows.index(self.agent) + 1])  # Sequentially move to next flow.
         else:
             # Reset nodes and flows.
