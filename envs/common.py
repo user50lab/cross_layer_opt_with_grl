@@ -19,11 +19,21 @@ def get_one_hot(x: int, n: int) -> ndarray:
     v[x] = 1
     return v
 
-
-def select_from_box(n_els: int, min_val: int, max_val: int, n_dims: int) -> ndarray:
+### 在一个n维的盒子中非重复地选择元素。
+def select_from_box(n_els: int, min_val: int, max_val: int, n_dims: int) -> ndarray:   # 接受四个参数：n_els是要选择的元素的数量，min_val是盒子中每个维度的最小值，max_val是盒子中每个维度的最大值，n_dims是盒子的维数。函数将返回一个NumPy数组(ndarray)。
     """Selects non-repetitive elements from a box."""
     legal_points = list(product(*list(repeat(np.arange(min_val, max_val), n_dims))))
+    '''
+    np.arange(min_val, max_val)：创建一个数组，包含从min_val（包括）到max_val（不包括）的整数序列。
+    repeat(np.arange(min_val, max_val), n_dims)：重复上面创建的数组n_dims次，为每个维度创建一个相同的范围。
+    product(*list(...))：计算笛卡尔积，为n_dims维度的盒子中的每个点创建一个坐标。*是解包操作符，它将列表中的元素作为单独的参数传递给product函数。
+    list(...)：将笛卡尔积结果转换成一个列表，这个列表包含了盒子中所有可能的点的坐标。
+    '''
     return np.array(sample(legal_points, n_els), dtype=np.float32)
+    '''
+    sample(legal_points, n_els)：从legal_points列表中随机选择n_els个不重复的元素。这使用了random.sample函数。
+    np.array(..., dtype=np.float32)：将选择的坐标点转换成一个NumPy数组，并设置数组的数据类型为float32。
+    '''
 
 
 def compute_jain_fairness_index(x: ndarray) -> float:
