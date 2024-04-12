@@ -49,8 +49,8 @@ class AdHocEnv(MultiAgentEnv):
 
         # Get attributes from scenario.
         scenario = SCENARIOS[scenario_name]
-        for k, v in scenario.__dict__.items():
-            setattr(self, k, v)
+        for k, v in scenario.__dict__.items():   # 将一个对象(scenario)的所有属性（键值对）复制到另一个对象(self)中。
+            setattr(self, k, v)   # 如果scenario对象有一个属性name，其值为"example"，那么self.name也会被设置为"example"。
         self.set_entities = scenario.set_entities  # Callback to set initial attributes of entities
 
         # In single-channel case, each relay has to transmit/receive on the same spectrum.
