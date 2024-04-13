@@ -95,24 +95,24 @@ class QuasiStationary(Stationary):
     def set_entities(self):
         pos_nodes = self.set_stationary_node_positions()
 
-        agt_rgn_pairs = random.sample([(0, 8), (8, 0), (2, 6), (6, 2)], 1)[0]
+        agt_rgn_pairs = random.sample([(0, 8), (8, 0), (2, 6), (6, 2)], 1)[0]   # 从给定的元组列表中随机选择一个元组作为代理流的源区域索引和目标区域索引。
         if agt_rgn_pairs in {(0, 8), (8, 0)}:
             amb_rgn_pairs = random.sample([(2, 4), (6, 4)], 1)[0]
         else:
             amb_rgn_pairs = random.sample([(0, 4), (8, 4)], 1)[0]
 
         # Ambient flows
-        src_rgn_idx, dst_rgn_idx = amb_rgn_pairs
-        amb_src_nids = self.sample_nodes_from_region(src_rgn_idx, self.n_amb_flows)
-        amb_dst_nids = self.sample_nodes_from_region(dst_rgn_idx, self.n_amb_flows)
+        src_rgn_idx, dst_rgn_idx = amb_rgn_pairs   # 解包环境流的区域对，分别获取源区域索引和目标区域索引。
+        amb_src_nids = self.sample_nodes_from_region(src_rgn_idx, self.n_amb_flows)   # 从环境流的源区域索引中抽样出指定数量（self.n_amb_flows）的源节点ID。
+        amb_dst_nids = self.sample_nodes_from_region(dst_rgn_idx, self.n_amb_flows)   # 从环境流的目标区域索引中抽样出相应数量的目标节点ID。
 
         # Agent flows
-        src_rgn_idx, dst_rgn_idx = agt_rgn_pairs
-        agt_src_nids = self.sample_nodes_from_region(src_rgn_idx, self.n_agt_flows)
-        agt_dst_nids = self.sample_nodes_from_region(dst_rgn_idx, self.n_agt_flows)
+        src_rgn_idx, dst_rgn_idx = agt_rgn_pairs   # 解包代理流的区域对，分别获取源区域索引和目标区域索引。
+        agt_src_nids = self.sample_nodes_from_region(src_rgn_idx, self.n_agt_flows)   # 从代理流的源区域索引中抽样出指定数量（self.n_agt_flows）的源节点ID。
+        agt_dst_nids = self.sample_nodes_from_region(dst_rgn_idx, self.n_agt_flows)   # 从代理流的目标区域索引中抽样出相应数量的目标节点ID。
 
-        src_nids = np.append(amb_src_nids, agt_src_nids)
-        dst_nids = np.append(amb_dst_nids, agt_dst_nids)
+        src_nids = np.append(amb_src_nids, agt_src_nids)   # 将环境流的源节点ID和代理流的源节点ID合并到一个数组中。
+        dst_nids = np.append(amb_dst_nids, agt_dst_nids)   # 将环境流的目标节点ID和代理流的目标节点ID合并到另一个数组中。
 
         return pos_nodes, src_nids, dst_nids
 
