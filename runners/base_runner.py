@@ -264,24 +264,24 @@ class BaseRunner:
             h, terminated = self.policy.init_hidden().to(self.device), False  # Reset RNN states and terminated.
 
             # Run an episode.
-            self.test_env.render()  # Render test env.
+            self.test_env.render()  # Render test env.   # 渲染测试环境，这通常用于可视化环境的当前状态。
             while not terminated:
                 # Get observations and available actions.
-                inputs = self.get_inputs_from_env(self.test_env, train_mode=False)
+                inputs = self.get_inputs_from_env(self.test_env, train_mode=False)   # 从测试环境中获取观测和可用的动作，train_mode=False表明是在测试模式下运行。
                 # Take (quasi) deterministic actions.
-                actions, h = self.policy.act(inputs['obs'], h, inputs['avail_actions'], mode='test')
+                actions, h = self.policy.act(inputs['obs'], h, inputs['avail_actions'], mode='test')   # 智能体的策略模型基于观测inputs['obs']、当前的隐藏状态h和可用动作inputs['avail_actions']来决定动作actions，同时更新隐藏状态h。
                 # Call test env step.
-                _, terminated, info = self.test_env.step(self.get_actions_to_env(actions, self.test_env))
+                _, terminated, info = self.test_env.step(self.get_actions_to_env(actions, self.test_env))   # 执行智能体决定的动作，更新环境状态，并获取反馈信息。terminated标志会更新以指示回合是否结束，info包含了回合的额外信息。
                 # Render test env.
-                self.test_env.render()
+                self.test_env.render()   # 再次渲染测试环境，以显示智能体执行动作后的结果。
 
             # Save figure of rendered test env.
-            if self.args.record_tests and j < 10:  # Save storage.
-                self.test_env.save_replay(save_dir=osp.join(self.run_dir, f't{self.t_env}'), tag=f'ep{j}')
+            if self.args.record_tests and j < 10:  # Save storage.   # 如果设置了记录测试并且当前回合数小于10，则执行下面的保存操作。
+                self.test_env.save_replay(save_dir=osp.join(self.run_dir, f't{self.t_env}'), tag=f'ep{j}')   # 将渲染的测试环境保存下来，用于后续回放或分析。
             # Record episode info.
             for name, rst in info.items():
                 if name != 'truncated':  # All entries other than episode limit are recorded
-                    if name not in test_ep_rsts:
+                    if name not in test_ep_rsts:   # 如果这个名称的信息还没有被记录在test_ep_rsts字典中，则初始化一个空列表。
                         test_ep_rsts[name] = []
                     test_ep_rsts[name].append(rst)
 
