@@ -440,39 +440,40 @@ class AdHocEnv(MultiAgentEnv):
 
         return avail_actions
 
+    ### 获取代理（agent）和相邻节点（neighbor nodes）的特征，作为观察结果（observation）返回。
     def get_obs(self):
-        obs = []
+        obs = []   # 初始化一个空列表obs，用于存放最终构建的观察结果。
 
-        own_feats = np.zeros(self.obs_own_feats_size, dtype=np.float32)
-        nbr_feats = np.zeros(self.obs_nbr_feats_size, dtype=np.float32)
+        own_feats = np.zeros(self.obs_own_feats_size, dtype=np.float32)   # 用来存储代理自身的特征。
+        nbr_feats = np.zeros(self.obs_nbr_feats_size, dtype=np.float32)   # 用来存储邻居节点的特征。
 
         # Get features of agent flow
-        ind = 0
-        own_feats[ind:ind + self.dim_pos] = self.agent.front.pos / self.range_pos  # Position of front node
-        ind += self.dim_pos
-        own_feats[ind:ind + self.dim_pos] = (self.agent.dst.pos - self.agent.front.pos) / self.range_pos  # Distance to destination
-        ind += self.dim_pos
-        if self.agent.p_bdg < float('inf'):  # If power budget is limited:
-            own_feats[ind] = self.agent.p_rem / self.agent.p_bdg  # Remaining power
+        ind = 0   # 索引变量ind，用于在数组中逐步填充特征。
+        own_feats[ind:ind + self.dim_pos] = self.agent.front.pos / self.range_pos  # Position of front node   # 将代理前节点的位置（self.agent.front.pos）除以位置范围（self.range_pos）后，存入own_feats数组的相应位置。这是归一化后的前节点位置特征。
+        ind += self.dim_pos   # 更新索引ind，以便下一个特征能够被放置在正确的位置。
+        own_feats[ind:ind + self.dim_pos] = (self.agent.dst.pos - self.agent.front.pos) / self.range_pos  # Distance to destination   # 计算代理的目的地位置与前节点位置之间的距离差，再除以位置范围进行归一化，存储在own_feats数组的相应位置。这是代理到目的地的相对距离特征。
+        ind += self.dim_pos   # 再次更新索引ind。
+        if self.agent.p_bdg < float('inf'):  # If power budget is limited:   # 检查代理的能量预算是否有限，即不是无穷大。
+            own_feats[ind] = self.agent.p_rem / self.agent.p_bdg  # Remaining power   # 如果能量预算有限，将代理剩余能量（self.agent.p_rem）除以能量预算（self.agent.p_bdg），存储在own_feats数组的当前索引位置。
             ind += 1
 
         # Get features of neighbor nodes.
-        front_nid = self.agent.front.nid
-        p_max = self.agent.p_lvs[-1]
-        for m, nbr in enumerate(self.nbrs):
-            ind = 0
+        front_nid = self.agent.front.nid   # 获取代理前节点的全局节点ID。
+        p_max = self.agent.p_lvs[-1]   # 获取代理可用功率级别的最大值。
+        for m, nbr in enumerate(self.nbrs):   # 遍历邻居节点列表self.nbrs，m是邻居的索引，nbr是邻居节点对象。
+            ind = 0   # 重置索引ind，用于填充邻居节点的特征。
             # Availability
-            nbr_feats[m, ind] = 1
+            nbr_feats[m, ind] = 1   # 将邻居的可用性（Availability）设置为1（表示可用），存储在邻居特征数组nbr_feats的当前位置。
             ind += 1
             # Relative distance to front node of agent
-            nbr_feats[m, ind:ind + self.dim_pos] = (nbr.pos - self.agent.front.pos) / self.range_pos
+            nbr_feats[m, ind:ind + self.dim_pos] = (nbr.pos - self.agent.front.pos) / self.range_pos   # 计算邻居节点位置与代理前节点位置的相对距离，并进行归一化，存储在nbr_feats数组的相应位置。
             ind += self.dim_pos
             # Relative distance to destination of agent
-            nbr_feats[m, ind:ind + self.dim_pos] = (nbr.pos - self.agent.dst.pos) / self.range_pos
+            nbr_feats[m, ind:ind + self.dim_pos] = (nbr.pos - self.agent.dst.pos) / self.range_pos   # 计算邻居节点位置与代理目的地位置的相对距离，并进行归一化，存储在nbr_feats数组的相应位置。
             ind += self.dim_pos
             # SINR in dB
-            sinr_per_chan = self.chan_coef[nbr.nid, front_nid] * p_max / (self.n0 * self.bw + self.p_inf[nbr.nid, front_nid])
-            nbr_feats[m, ind] = np.log10(max(np.max(sinr_per_chan), 1e-10))  # Avoid extreme value of SINR in dB.
+            sinr_per_chan = self.chan_coef[nbr.nid, front_nid] * p_max / (self.n0 * self.bw + self.p_inf[nbr.nid, front_nid])   # 计算信噪比（SINR）：通过将信道系数（self.chan_coef[nbr.nid, front_nid]）乘以最大功率（p_max），然后除以噪声功率（由噪声功率谱密度self.n0乘以带宽self.bw）加上干扰功率（self.p_inf[nbr.nid, front_nid]）得到的。
+            nbr_feats[m, ind] = np.log10(max(np.max(sinr_per_chan), 1e-10))  # Avoid extreme value of SINR in dB.   # 将计算出的SINR值转换为分贝（dB）单位，并确保不会出现极端值。这个值存储在nbr_feats数组的当前索引位置。
 
         obs.append(dict(agent=own_feats, nbr=nbr_feats))
         return obs
