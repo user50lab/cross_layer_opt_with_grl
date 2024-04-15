@@ -208,12 +208,12 @@ class AdHocEnv(MultiAgentEnv):
             self.handover_agent(self.agt_flows[0])
 
     def step(self, action) -> tuple[ndarray, bool, dict[str, Any]]:
-        if isinstance(action, list):
-            assert len(action) == self.n_agents, "Inconsistent numbers between actions and agents."
-            action = action[0]
+        if isinstance(action, list):   # 判断 action 是否为一个列表。
+            assert len(action) == self.n_agents, "Inconsistent numbers between actions and agents."   # 断言语句，用来确保 action 列表的长度和智能体（agents）的数量 self.n_agents 相等。
+            action = action[0]   # 如果断言通过（即动作列表的长度等于智能体的数量），这行代码将 action 变量重新赋值为列表中的第一个元素。这是基于假设所有智能体都将执行相同的动作，或者这个环境仅仅需要一个代表性的动作。
 
         # Get selected nbr, power level.
-        flow_action = self.all_actions[self.agent.fid][action]
+        flow_action = self.all_actions[self.agent.fid][action]   # 据当前智能体的标识符 fid 和提供的 action 索引，从所有可能的动作集中选取了一个具体的动作
         # print(f"self.all_actions[self.agent.fid] = {self.all_actions[self.agent.fid]}")
         # print(f"action = {action}, flow_action = {flow_action}")
         if self._learn_pc:
@@ -229,7 +229,7 @@ class AdHocEnv(MultiAgentEnv):
         # Enhance performance by eliminating unselected neighbors closer than selected one.
         front_nid = self.agent.front.nid
         for nbr in self.nbrs:
-            is_closer_than_selected_nbr = self.d_n2n[nbr.nid, front_nid] < self.d_n2n[next_node.nid, front_nid]
+            is_closer_than_selected_nbr = self.d_n2n[nbr.nid, front_nid] < self.d_n2n[next_node.nid, front_nid]   # 计算当前邻居节点到前端节点的距离是否小于已选择的下一个节点到前端节点的距离。
             if is_closer_than_selected_nbr and (nbr is not self.agent.dst):
                 self.agent.ban(nbr)
 
@@ -355,11 +355,12 @@ class AdHocEnv(MultiAgentEnv):
             sinr_per_hop.append(self.link_sinr[link.rx.nid, link.tx.nid, link.chan_idx])
         return min(sinr_per_hop)
 
+    ### 为发送节点和接收节点分配一个子信道。
     def allocate_channel(self, tx_node: Node, rx_node: Node):
         """Allocates sub-channel for a transceiver pair."""
-        p_inf_per_chan = self.p_inf[rx_node.nid, tx_node.nid]
-        for chan_idx in np.argsort(p_inf_per_chan):  # Starting from channel with the lowest inf level:
-            if (tx_node.idle[chan_idx] or self._allow_full_duplex) and rx_node.idle[chan_idx]:
+        p_inf_per_chan = self.p_inf[rx_node.nid, tx_node.nid]   # 从一个名为 self.p_inf 的数据结构中获取了两个节点间所有子信道的干扰水平。p_inf 可能是一个二维数组或矩阵，其中 rx_node.nid 和 tx_node.nid 分别是接收节点和发送节点的节点ID，用于索引这两个节点之间的干扰信息。
+        for chan_idx in np.argsort(p_inf_per_chan):  # Starting from channel with the lowest inf level:   # 对 p_inf_per_chan 中的干扰水平进行排序，并返回排序后的索引。这样就可以从干扰最小的信道开始遍历。
+            if (tx_node.idle[chan_idx] or self._allow_full_duplex) and rx_node.idle[chan_idx]:   # 是否满足：发送节点在该信道上是空闲的，或者允许全双工通信（self._allow_full_duplex 为真），并且接收节点在该信道上也是空闲的。
                 return chan_idx
         # This should not happen since it is prevented by `check` mechanism.
         raise Warning("No channel is available!")
