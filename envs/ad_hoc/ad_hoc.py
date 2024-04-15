@@ -323,13 +323,14 @@ class AdHocEnv(MultiAgentEnv):
             nbrs2_per_nbr.append(nbrs2)
         return nbrs2_per_nbr
 
+    ### 计算网络中所有连接（links）的可实现传输速率。
     def _update_per_link_rate(self):
         """Computes achievable rate of all links."""
-        p_tx = np.stack([node.p_tx for node in self.nodes])  # Tx power (Watt)
-        self.p_rx = self.chan_coef * (1 - np.expand_dims(np.eye(self.n_nodes), axis=-1)) * p_tx  # Rx power (Watt)
-        self.p_inf = np.zeros_like(self.p_rx) if self._mute_inf else self.p_rx.sum(1, keepdims=True) - self.p_rx  # Interference (Watt)
-        self.link_sinr = self.p_rx / (self.p_inf + self.bw * self.n0)  # Signal-to-interference-plus-noise ratio
-        self.link_rates = self.bw * np.log2(1 + self.link_sinr) * 1e-6  # Achievable rates (Mbps)
+        p_tx = np.stack([node.p_tx for node in self.nodes])  # Tx power (Watt)   # 使用列表推导式获取 self.nodes 中每个节点的发送功率 p_tx，然后使用 NumPy 的 stack 函数将它们堆叠成一个数组。
+        self.p_rx = self.chan_coef * (1 - np.expand_dims(np.eye(self.n_nodes), axis=-1)) * p_tx  # Rx power (Watt)   # 计算接收功率 p_rx。self.chan_coef 是一个与信道有关的系数矩阵，np.eye(self.n_nodes) 创建一个单位矩阵，表示节点不能接收到自己发送的功率，np.expand_dims(..., axis=-1) 用于增加一个维度以匹配 p_tx 的维度。最后与发送功率 p_tx 相乘以得到接收功率。
+        self.p_inf = np.zeros_like(self.p_rx) if self._mute_inf else self.p_rx.sum(1, keepdims=True) - self.p_rx  # Interference (Watt)   # 计算干扰功率 p_inf。如果 self._mute_inf 为真，则干扰功率被设置为零。否则，计算总的接收功率（self.p_rx.sum(1, keepdims=True)），然后减去节点自己的接收功率，得到干扰功率。
+        self.link_sinr = self.p_rx / (self.p_inf + self.bw * self.n0)  # Signal-to-interference-plus-noise ratio   # 计算每个连接的信噪比（SINR）。self.bw 是信道的带宽，self.n0 是噪声功率谱密度。将接收功率 p_rx 除以干扰功率加上噪声功率（self.bw * self.n0）得到 SINR。
+        self.link_rates = self.bw * np.log2(1 + self.link_sinr) * 1e-6  # Achievable rates (Mbps)   # 使用夏农公式计算每个连接的可实现传输速率，并将结果转换为 Mbps（兆比特每秒）。
 
     def get_per_hop_rate(self, flow: Flow):
         """Returns the rate of each hop along a data flow."""
