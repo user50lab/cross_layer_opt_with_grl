@@ -143,7 +143,7 @@ class BaseRunner:
         """Completes an agent-env interaction loop of MDP."""
 
         # Build pre-decision data. 字典结合了从环境中获取的输入（通过self.get_inputs_from_env(self.env)方法）以及当前的rnn_states。
-        pre_decision_data = dict(**self.get_inputs_from_env(self.env), **rnn_states)
+        pre_decision_data = dict(**self.get_inputs_from_env(self.env), **rnn_states)   # dict(**x, **y)是Python中的字典解包语法，它创建了一个新字典，包含了两个字典x和y中的所有键值对。如果两个字典中有相同的键，那么来自y的键值对将覆盖x中的键值对。
 
         # Select actions following epsilon-greedy strategy.
         # print(f"self.env.nbrs = {[nbr.nid for nbr in self.env.nbrs]}, "
