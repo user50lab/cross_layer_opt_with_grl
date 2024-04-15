@@ -486,7 +486,7 @@ class AdHocEnv(MultiAgentEnv):
         return nf_own
 
     @property
-    def obs_nbr_feats_size(self):
+    def obs_nbr_feats_size(self):   # 返回两个值：最大邻居数和每个邻居的特征维度数。
         nf_nbr = 1 + self.dim_pos + self.dim_pos  # Availability, distance to agent, distance to destination
         nf_nbr += 1  # Cumulative interference
         return self.max_nbrs, nf_nbr
