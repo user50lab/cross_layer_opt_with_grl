@@ -230,11 +230,12 @@ class BaseRunner:
                 state = env.get_state().to(self.device)
                 inputs_from_env['state'] = state
         return inputs_from_env
-    
+
+    ### 将策略产生的动作张量(actions)转换为环境(env)可以理解的动作列表格式。
     def get_actions_to_env(self, actions: Tensor, env) -> list:
         """Transforms actions from policy to a list."""
         acts = actions.cpu().numpy()  # Convert to ndarray.
-        acts_per_agent = np.split(acts, env.n_agents, axis=0)  # Each entry correspond to action of an agent.
+        acts_per_agent = np.split(acts, env.n_agents, axis=0)  # Each entry correspond to action of an agent.   # 将 acts 数组分割成多个子数组的，每个子数组对应一个智能体（agent）的动作。
         if self.args.is_discrete:  # When discrete action is adopted,
             if self.args.is_multi_discrete:
                 acts_per_agent = [act.squeeze().tolist() for act in acts_per_agent]  # Convert ndarray to list.
