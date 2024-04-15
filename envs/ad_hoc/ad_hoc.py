@@ -451,7 +451,7 @@ class AdHocEnv(MultiAgentEnv):
         ind = 0   # 索引变量ind，用于在数组中逐步填充特征。
         own_feats[ind:ind + self.dim_pos] = self.agent.front.pos / self.range_pos  # Position of front node   # 将代理前节点的位置（self.agent.front.pos）除以位置范围（self.range_pos）后，存入own_feats数组的相应位置。这是归一化后的前节点位置特征。
         ind += self.dim_pos   # 更新索引ind，以便下一个特征能够被放置在正确的位置。
-        own_feats[ind:ind + self.dim_pos] = (self.agent.dst.pos - self.agent.front.pos) / self.range_pos  # Distance to destination   # 计算代理的目的地位置与前节点位置之间的距离差，再除以位置范围进行归一化，存储在own_feats数组的相应位置。这是代理到目的地的相对距离特征。
+        own_feats[ind:ind + self.dim_pos] = (self.agent.dst.pos - self.agent.front.pos) / self.range_pos  # Distance to destination   # 计算智能体目的地（dst）与其前方节点（front）之间的位置差，并且将这个差值进行标准化，然后存储到智能体的特征数组 own_feats 中的特定位置。
         ind += self.dim_pos   # 再次更新索引ind。
         if self.agent.p_bdg < float('inf'):  # If power budget is limited:   # 检查代理的能量预算是否有限，即不是无穷大。
             own_feats[ind] = self.agent.p_rem / self.agent.p_bdg  # Remaining power   # 如果能量预算有限，将代理剩余能量（self.agent.p_rem）除以能量预算（self.agent.p_bdg），存储在own_feats数组的当前索引位置。
@@ -473,6 +473,8 @@ class AdHocEnv(MultiAgentEnv):
             ind += self.dim_pos
             # SINR in dB
             sinr_per_chan = self.chan_coef[nbr.nid, front_nid] * p_max / (self.n0 * self.bw + self.p_inf[nbr.nid, front_nid])   # 计算信噪比（SINR）：通过将信道系数（self.chan_coef[nbr.nid, front_nid]）乘以最大功率（p_max），然后除以噪声功率（由噪声功率谱密度self.n0乘以带宽self.bw）加上干扰功率（self.p_inf[nbr.nid, front_nid]）得到的。
+            # self.chan_coef[nbr.nid, front_nid]：这部分表示从邻居节点 nbr 到前方节点 front_nid 的信道系数（channel coefficient）。
+            # self.p_inf[nbr.nid, front_nid]：这部分表示从邻居节点到前方节点的干扰功率（Interference Power）。
             nbr_feats[m, ind] = np.log10(max(np.max(sinr_per_chan), 1e-10))  # Avoid extreme value of SINR in dB.   # 将计算出的SINR值转换为分贝（dB）单位，并确保不会出现极端值。这个值存储在nbr_feats数组的当前索引位置。
 
         obs.append(dict(agent=own_feats, nbr=nbr_feats))
