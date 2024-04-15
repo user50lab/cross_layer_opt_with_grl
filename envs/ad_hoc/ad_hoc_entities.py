@@ -125,11 +125,11 @@ class Flow:
     def add_hop(self, next_node: Node, chan_idx: int, p_idx: int) -> None:
         """Adds a hop to the route."""
         # Create a link between current front node and next node.
-        link = Link(self.front, next_node, chan_idx, self.p_lvs[p_idx])
+        link = Link(self.front, next_node, chan_idx, self.p_lvs[p_idx])   # 创建了一个名为 Link 的新实例，代表当前前端节点 self.front 和传入的下一个节点 next_node 之间的连接。连接的信道由 chan_idx 指定，使用的功率等级从 self.p_lvs 列表中根据 p_idx 获取。
         # Add link to route.
-        self.route.append(link)
+        self.route.append(link)   # 将新创建的 link 连接添加到实例变量 self.route 列表的末尾，其中 self.route 代表整个路由。
         # Disqualify added node to prevent loop in the route.
-        self.qual_nodes[next_node.nid] = 0
+        self.qual_nodes[next_node.nid] = 0   # 存储了节点的资格状态，防止路由中出现循环，即确保不会再次选择已经在路由中的节点。
 
     @property
     def n_hops(self) -> int:
