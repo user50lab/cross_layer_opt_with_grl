@@ -49,20 +49,21 @@ class QLearner(BaseLearner):
         if self.args.anneal_lr:
             self.lr_scheduler.step()
 
+    ### 通过BPTT更新循环模型的参数。
     def update(self, buffer, batch_size: int):
         """Updates parameters of recurrent models via BPTT."""
         self.online_policy.train()  # Set policy to train mode.
         self.target_policy.train()
 
-        batch = buffer.recall(batch_size)  # Batched samples from reply buffer
+        batch = buffer.recall(batch_size)  # Batched samples from reply buffer   # 从经验回放缓冲区中回收大小为 batch_size 的一批样本。
 
-        obs = [batch['obs'][t].to(self.device) for t in range(len(batch['obs']))]
-        avail_actions = th.stack(batch['avail_actions']).to(self.device) if 'avail_actions' in batch else None
-        actions = th.stack(batch['actions']).to(self.device)  # Shape (data_chunk_len, batch_size * n_agents, 1)
-        rewards = th.stack(batch['rewards']).to(self.device)  # Shape (data_chunk_len, batch_size, n_agents)
-        terminated = th.stack(batch['terminated']).to(self.device)  # Shape (data_chunk_len, batch_size, 1)
-        mask = th.stack(batch['filled']).to(self.device)  # Shape (data_chunk_len, batch_size, 1)
-        h, h_targ = batch['h'][0].to(self.device), batch['h'][1].to(self.device)  # Get initial hidden states.
+        obs = [batch['obs'][t].to(self.device) for t in range(len(batch['obs']))]   # 将观察(observation)的每个时间步骤转移到指定的设备
+        avail_actions = th.stack(batch['avail_actions']).to(self.device) if 'avail_actions' in batch else None   # 如果批次中包含可用动作（avail_actions），则将它们堆叠起来并转移到设备上。
+        actions = th.stack(batch['actions']).to(self.device)  # Shape (data_chunk_len, batch_size * n_agents, 1)   # 将动作堆叠起来并转移到设备上。
+        rewards = th.stack(batch['rewards']).to(self.device)  # Shape (data_chunk_len, batch_size, n_agents)   # 将奖励堆叠起来并转移到设备上。
+        terminated = th.stack(batch['terminated']).to(self.device)  # Shape (data_chunk_len, batch_size, 1)   # 将终止信号堆叠起来并转移到设备上。
+        mask = th.stack(batch['filled']).to(self.device)  # Shape (data_chunk_len, batch_size, 1)   # 将填充掩码（mask）堆叠起来并转移到设备上。
+        h, h_targ = batch['h'][0].to(self.device), batch['h'][1].to(self.device)  # Get initial hidden states.   # 获取批次中的初始隐状态，并转移到设备上。
 
         # print(f"rewards.size() = {rewards.size()}, mask.size() = {mask.size()}")
         # for t in range(mask.size(0)):
