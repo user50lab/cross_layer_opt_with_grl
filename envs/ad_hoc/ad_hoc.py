@@ -396,7 +396,8 @@ class AdHocEnv(MultiAgentEnv):
         """Returns agent action by heuristic AI."""
         # Interpret heuristic scheme.
         rt, pc = scheme   # 路由器策略和功率控制器策略。
-        assert (rt in self.LEGAL_ROUTERS) and (pc in self.LEGAL_POWER_CONTROLLERS), \   # 断言，用来验证 rt 和 pc 是否是合法的路由器和功率控制器策略。
+        # 断言，用来验证 rt 和 pc 是否是合法的路由器和功率控制器策略。
+        assert (rt in self.LEGAL_ROUTERS) and (pc in self.LEGAL_POWER_CONTROLLERS), \
             f"Unrecognized heuristic router/power controller ({scheme}) is received."
 
         # Select next hop from neighbors.
