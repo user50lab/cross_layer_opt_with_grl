@@ -207,6 +207,7 @@ class AdHocEnv(MultiAgentEnv):
             # Assign agent flow.
             self.handover_agent(self.agt_flows[0])
 
+    ### 模拟了智能体在环境中执行一个动作并返回结果的过程。
     def step(self, action) -> tuple[ndarray, bool, dict[str, Any]]:
         if isinstance(action, list):   # 判断 action 是否为一个列表。
             assert len(action) == self.n_agents, "Inconsistent numbers between actions and agents."   # 断言语句，用来确保 action 列表的长度和智能体（agents）的数量 self.n_agents 相等。
@@ -640,6 +641,7 @@ class AdHocEnv(MultiAgentEnv):
     def shared_obs_nbr2_feats_size(self):
         return self.max_nbrs, self.max_nbrs, self.obs_nbr_feats_size[-1]
 
+    ### 计算智能体在当前状态下的奖励。
     def _get_reward(self):
         # Reward SINR of bottleneck link.
         bias = 5
