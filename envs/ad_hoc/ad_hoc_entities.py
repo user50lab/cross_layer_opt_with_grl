@@ -136,10 +136,11 @@ class Flow:
         """Number of hops"""
         return len(self.route)
 
+    ### 判定源节点（source）是否通过当前的路由与目的节点（destination）连接。
     @property
     def is_connected(self) -> bool:
         """Returns whether source node is connected to destination with current route"""
-        return self.front == self.dst
+        return self.front == self.dst   # 判断当前路由的最后一个节点是否为目的节点
 
     @property
     def front(self) -> Node:
@@ -151,16 +152,19 @@ class Flow:
         """Number of Tx power levels"""
         return len(self.p_lvs)
 
+    ### 计算并返回总的功率成本。
     @property
     def p_tot(self) -> float:
         """Total power cost"""
         return sum([link.p_tx for link in self.route])
 
+    ### 计算并返回剩余的功率预算。
     @property
     def p_rem(self) -> float:
         """Remaining power budget"""
         return self.p_bdg - self.p_tot
 
+    ### 获取当前路由中所有节点的ID。
     @property
     def nids_in_route(self):
         return [self.src.nid] + [link.rx.nid for link in self.route]
