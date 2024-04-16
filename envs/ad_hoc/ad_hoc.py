@@ -660,11 +660,12 @@ class AdHocEnv(MultiAgentEnv):
         tx_nid, rx_nid = link.tx.nid, link.rx.nid
         return self.d_n2n[rx_nid, tx_nid]
 
+    ### 评估智能体流（agent flows）的总体性能。
     def evaluate_performance(self):
         """Evaluates the overall performance of agent flows."""
-        perf_ind_dict = {
-            'BottleneckRate': [self.get_bottleneck_rate(flow)[0] for flow in self.agt_flows],
-            'Hops': [flow.n_hops for flow in self.agt_flows],
+        perf_ind_dict = {   # 字典 perf_ind_dict 用来存储性能指标
+            'BottleneckRate': [self.get_bottleneck_rate(flow)[0] for flow in self.agt_flows],   # 遍历每一个流获取瓶颈速率，并从返回的元组中取第一个元素。
+            'Hops': [flow.n_hops for flow in self.agt_flows],   # 列表推导式，遍历每一个流 flow 并获取它的跳数 n_hops。
         }
 
         # When power budget is finite, record the total amount of power consumption.
