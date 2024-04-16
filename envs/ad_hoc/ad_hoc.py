@@ -289,7 +289,7 @@ class AdHocEnv(MultiAgentEnv):
             nbrs = []
             for nid in sorted_nids:
                 # Add node to neighbors when all of following conditions are met: The neighbor
-                # 1) lies within the sensing range, 2) Meets the qualification of current agent flow.
+                # 1) lies within the sensing range, 2) Meets the qualification of current agent flow.   # （1）当前节点 nid 与前端节点 front_nid 之间的距离小于或等于传感范围 self.r_sns。（2）当前节点 nid 满足代理流（self.agent）的某些资格条件。
                 if (self.d_n2n[nid, front_nid] <= self.r_sns) and self.agent.check(self.nodes[nid]):
                     nbrs.append(self.nodes[nid])
                 # End when maximum number of neighbors are collected.
@@ -297,9 +297,9 @@ class AdHocEnv(MultiAgentEnv):
                     break
             # Shuffle the order of neighbors.
             random.shuffle(nbrs)   # 对邻居列表进行随机排序。
-            is_isolated = (len(nbrs) == 0) and not self.agent.is_connected   # 检查是否处于孤立状态，即没有找到邻居，且代理流没有连接。
-            if is_isolated and self._force_cnct:
-                nbrs = [self.agent.dst]
+            is_isolated = (len(nbrs) == 0) and not self.agent.is_connected   # 判断当前节点是否处于孤立状态。如果邻居列表为空（即 len(nbrs) == 0）并且代理流（self.agent）并未连接，则认为是孤立的。
+            if is_isolated and self._force_cnct:   # 节点确实处于孤立状态并且存在一个强制连接的要求
+                nbrs = [self.agent.dst]   # 邻居列表 nbrs 将被设置为仅包含代理的目的地节点
         # Assign neighbors.
         if (not self._force_cnct) and (not self.agent.is_connected):
             assert len(nbrs) > 0, "Empty neighbor set is found."
