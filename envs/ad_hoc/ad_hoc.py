@@ -390,25 +390,26 @@ class AdHocEnv(MultiAgentEnv):
             can_afford_pow_lvs = [(p < p_rem - p_min) for p in self.agent.p_lvs]
         return can_afford_pow_lvs
 
+    ### 根据启发式算法来返回智能体（agent）的动作。
     def get_heuristic_action(self, scheme: tuple[str, str]):
         """Returns agent action by heuristic AI."""
         # Interpret heuristic scheme.
-        rt, pc = scheme
-        assert (rt in self.LEGAL_ROUTERS) and (pc in self.LEGAL_POWER_CONTROLLERS), \
+        rt, pc = scheme   # 路由器策略和功率控制器策略。
+        assert (rt in self.LEGAL_ROUTERS) and (pc in self.LEGAL_POWER_CONTROLLERS), \   # 断言，用来验证 rt 和 pc 是否是合法的路由器和功率控制器策略。
             f"Unrecognized heuristic router/power controller ({scheme}) is received."
 
         # Select next hop from neighbors.
         if rt == 'c2Dst':
-            d_nbr2dst = [self.d_n2dst[nbr.nid, self.agent.fid] for nbr in self.nbrs]
-            sel_nbr_idx = np.argmin(d_nbr2dst)
+            d_nbr2dst = [self.d_n2dst[nbr.nid, self.agent.fid] for nbr in self.nbrs]   # 使用列表推导式来计算每个邻居节点到目的地的距离，并将这些距离存储在列表 d_nbr2dst 中。
+            sel_nbr_idx = np.argmin(d_nbr2dst)   # 找到到目的地距离最小的邻居节点的索引。
             # print(f"d_nbr2dst = {d_nbr2dst}, sel_nbr_idx = {sel_nbr_idx}")
         elif rt == 'mSINR':
-            front_nid = self.agent.front.nid
-            sinr_per_nbr = []
+            front_nid = self.agent.front.nid   # 获取当前智能体所在节点的前端节点ID。
+            sinr_per_nbr = []   # 初始化列表，存储每个邻居节点的信噪比（SINR）。
             for nbr in self.nbrs:
-                sinr = self.chan_coef[nbr.nid, front_nid] * self.agent.p_lvs[-1] / (self.n0 * self.bw + self.p_inf[nbr.nid, front_nid])
-                sinr_per_nbr.append(sinr)
-                sel_nbr_idx = np.argmax(sinr_per_nbr)
+                sinr = self.chan_coef[nbr.nid, front_nid] * self.agent.p_lvs[-1] / (self.n0 * self.bw + self.p_inf[nbr.nid, front_nid])   # 计算每个邻居节点的信噪比。
+                sinr_per_nbr.append(sinr)   # 将计算出的信噪比添加到列表。
+                sel_nbr_idx = np.argmax(sinr_per_nbr)   # 找出信噪比最大的邻居节点的索引。
         else:
             raise KeyError(f"Unrecognized heuristic scheme `{scheme}` to select next node.")
 
